@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCD Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <canvas id="matrix-canvas" style="position: fixed; top: 0; left: 0; z-index: -1;"></canvas>
+    <div class="container">
+        <div class="header-row">
+            <h1>GCD Calculator</h1>
+            <div class="header-actions">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <button id="device-toggle-btn">Mobile View</button>
+                <a href="lcm.html">LCM Page</a>
+                <a href="index.html">Home</a>
+            </div>
+        </div>
+        <form id="calc-form">
+            <div class="input-group">
+                <label for="numbers">Numbers (comma-separated):</label>
+                <input type="text" id="numbers" placeholder="e.g., 12, -18, 24">
+                <button type="button" id="voice-btn">🎤</button>
+            </div>
+            <div class="button-group">
+                <button type="button" id="gcd-btn">GCD</button>
+                <button type="button" id="clear-btn">Clear</button>
+            </div>
+        </form>
+        <div id="result"></div>
+        <div id="prime-factors"></div>
+        <div id="explanation"></div>
+        <div id="number-types"></div>
+        <div id="chart-container">
+            <canvas id="chart" height="120"></canvas>
+        </div>
+        <div id="export-group">
+            <button id="export-txt-btn">Export as Text</button>
+            <button id="export-pdf-btn">Export as PDF</button>
+        </div>
+        <div id="history-container">
+            <h2>History</h2>
+            <ul id="history-list"></ul>
+        </div>
+        <div id="algorithms-info">
+            <h2>Algorithms Used</h2>
+            <ul>
+                <li><b>Euclidean Algorithm:</b> Finds the greatest common divisor by repeatedly dividing and taking remainders until zero is reached.</li>
+                <li><b>Prime Factorization:</b> Breaks numbers into prime factors.</li>
+            </ul>
+        </div>
+        <div id="applications-info">
+            <h2>Applications</h2>
+            <ul>
+                <li><b>Fractions:</b> Reducing fractions to lowest terms.</li>
+                <li><b>Gear Ratios:</b> Simplifying gear ratios.</li>
+                <li><b>Cryptography:</b> GCD is used in RSA key generation.</li>
+            </ul>
+        </div>
+    </div>
+    <div id="result-live" aria-live="assertive"></div>
+    <script src="script.js"></script>
+</body>
+</html>

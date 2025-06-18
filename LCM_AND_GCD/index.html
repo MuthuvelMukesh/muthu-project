@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LCM & GCD Calculator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <canvas id="matrix-canvas" style="position: fixed; top: 0; left: 0; z-index: -1;"></canvas>
+    <div class="container">
+        <div class="header-row">
+            <h1>LCM & GCD Calculator</h1>
+            <div class="header-actions">
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+                <button id="device-toggle-btn">Mobile View</button>
+            </div>
+        </div>
+        <form id="calc-form">
+            <div class="input-group">
+                <label for="numbers">Numbers (comma-separated):</label>
+                <input type="text" id="numbers" placeholder="e.g., 12, -18, 24">
+                <button type="button" id="voice-btn">🎤</button>
+            </div>
+            <div class="button-group">
+                <button type="button" id="gcd-btn">GCD</button>
+                <button type="button" id="lcm-btn">LCM</button>
+                <button type="button" id="clear-btn">Clear</button>
+            </div>
+        </form>
+        <div id="result"></div>
+        <div id="prime-factors"></div>
+        <div id="explanation"></div>
+        <div id="number-types"></div>
+        <div id="chart-container">
+            <canvas id="chart" height="120"></canvas>
+        </div>
+        <div id="export-group">
+            <button id="export-txt-btn">Export as Text</button>
+            <button id="export-pdf-btn">Export as PDF</button>
+        </div>
+        <div id="history-container">
+            <h2>History</h2>
+            <ul id="history-list"></ul>
+        </div>
+        <div id="algorithms-info">
+            <h2>Algorithms Used</h2>
+            <ul>
+                <li><b>Euclidean Algorithm (for GCD):</b> Finds the greatest common divisor by repeatedly dividing and taking remainders until zero is reached.</li>
+                <li><b>LCM via GCD:</b> LCM(a, b) = |a × b| / GCD(a, b).</li>
+                <li><b>Prime Factorization:</b> Breaks numbers into prime factors.</li>
+            </ul>
+        </div>
+        <div id="applications-info">
+            <h2>Applications</h2>
+            <ul>
+                <li><b>Scheduling:</b> Finding when events with different cycles coincide.</li>
+                <li><b>Gear Ratios:</b> Designing gears using LCM and GCD.</li>
+                <li><b>Fractions:</b> Simplifying or adding fractions.</li>
+                <li><b>Cryptography:</b> GCD is used in RSA key generation.</li>
+            </ul>
+        </div>
+    </div>
+    <div id="result-live" aria-live="assertive"></div>
+    <script src="script.js"></script>
+</body>
+</html>
