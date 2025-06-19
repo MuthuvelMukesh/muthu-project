@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - CipherVeil: Steganographic Enigma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark-theme {
+            background: #1a1a1a;
+            color: #00ddff;
+        }
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.8;
+            transition: opacity 0.5s;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: rgba(0, 15, 20, 0.7);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+            border: 2px solid #00ffaa;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease, box-shadow 0.5s ease, background 0.5s ease, border-color 0.5s ease;
+            animation: neonBorder 3s infinite alternate;
+        }
+        .container:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(2deg) scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffaa;
+            margin-bottom: 30px;
+            font-size: 3.2em;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #00ffaa, #00ddff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            animation: glitch 2s infinite alternate;
+        }
+        h2 {
+            color: #00ddff;
+            margin: 20px 0 15px;
+            font-size: 2em;
+            text-shadow: 0 0 10px #00ddff;
+        }
+        p, li {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        ul li:before {
+            content: ">> ";
+            color: #00ffaa;
+            transition: color 0.5s ease;
+        }
+        .section {
+            background: rgba(0, 20, 30, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #00ffaa;
+            margin-bottom: 20px;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        #cursor-trail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .trail {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(45deg, #00ffaa, #00ddff);
+            border-radius: 50%;
+            opacity: 0.9;
+            box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            pointer-events: none;
+            animation: fadeTrail 0.9s ease-out forwards;
+        }
+        .trail.glitch {
+            background: linear-gradient(45deg, #ff00aa, #ff0000);
+            transform: skew(20deg) rotate(45deg);
+            animation: glitchFade 0.6s ease-out forwards;
+        }
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleBurst 1s ease-out forwards;
+        }
+        @keyframes fadeTrail {
+            0% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); }
+        }
+        @keyframes glitchFade {
+            0% { opacity: 0.9; transform: scale(1) skew(20deg) rotate(45deg); }
+            50% { opacity: 0.6; transform: scale(1.4) skew(-15deg) rotate(60deg); }
+            100% { opacity: 0; transform: scale(0.5) skew(0deg) rotate(90deg); }
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ffaa; }
+            to { text-shadow: 0 0 25px #00ffaa, 0 0 35px #00ddff; }
+        }
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+        }
+        @keyframes particleBurst {
+            0% { opacity: 1; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(0.5) translate(var(--tx), var(--ty)); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px #00ffaa; }
+            50% { box-shadow: 0 0 20px #00ffaa, 0 0 30px #00ddff; }
+            100% { box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff; }
+        }
+        @keyframes neonBorder {
+            0% { border-color: #00ffaa; }
+            50% { border-color: #00ddff; }
+            100% { border-color: #00ffaa; }
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: #00ddff;
+            color: #000;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            animation: flicker 4s infinite;
+        }
+        .theme-toggle:hover {
+            background: #00ffaa;
+            transform: translateY(-2px);
+        }
+        .theme-toggle.active {
+            box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            animation: pulseGlow 0.8s ease-out;
+        }
+        .nav-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 10px 15px;
+            background: #00ddff;
+            color: #000;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .nav-link:hover {
+            background: #00ffaa;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #00ffaa;
+        }
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div id="cursor-trail"></div>
+    <div class="container">
+        <div class="nav-bar">
+            <a href="encode.html" class="nav-link">Encode</a>
+            <a href="decode.html" class="nav-link">Decode</a>
+        </div>
+        <div class="theme-toggle" onclick="toggleTheme()">Toggle Theme</div>
+        <h1>About CipherVeil: Steganographic Enigma</h1>
+        <div class="section">
+            <h2>About</h2>
+            <p>This tool combines steganography and cryptography to hide messages within images. Using a Caesar Cipher for encryption and optional XOR encryption, it embeds the encoded message into the least significant bits of an image's pixel data. The result is a visually unchanged image that secretly contains your message.</p>
+        </div>
+        <div class="section">
+            <h2>FAQ</h2>
+            <ul>
+                <li><strong>What is steganography?</strong> Steganography is the practice of hiding a message within another medium, like an image, so it’s not obvious to casual observers.</li>
+                <li><strong>How secure is this tool?</strong> It uses a Caesar Cipher and optional XOR encryption with a password hash. While not military-grade, it’s effective for casual use. For higher security, use stronger encryption externally.</li>
+                <li><strong>Why a 4-digit password?</strong> It’s a balance between usability and security. The password is hashed for added protection.</li>
+                <li><strong>Can I use any image?</strong> Yes, but larger images can hold more data. Check the capacity info when selecting an image.</li>
+                <li><strong>What’s the XOR option?</strong> It adds an extra layer of encryption using the password as a key, making the message harder to crack.</li>
+            </ul>
+        </div>
+        <div class="section">
+            <h2>Authors</h2>
+            <p><strong>Lead Developers:</strong>TEAM BURSKERTURS</p>
+            <p><strong>AI Assistant:</strong> Grok (xAI) - Provided code optimization and enhancements.</p>
+            <p><strong>Created:</strong> February 27, 2025</p>
+            <p>This project was developed as a fun exploration of steganography and web development. Contributions and feedback are welcome!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%&*(){}[]><~|';
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = Array(columns).fill(0);
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 2, 5, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = document.body.classList.contains('dark-theme') ? '#00ddff' : '#00ffaa';
+            ctx.font = fontSize + 'px monospace';
+            drops.forEach((y, i) => {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                const x = i * fontSize;
+                ctx.fillText(text, x, y * fontSize);
+                if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(drawMatrix, 40);
+
+        const cursorTrail = document.getElementById('cursor-trail');
+        document.addEventListener('mousemove', (e) => {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            const trailSize = 12;
+            trail.style.left = `${e.clientX - trailSize/2}px`;
+            trail.style.top = `${e.clientY - trailSize/2}px`;
+            if (Math.random() < 0.2) {
+                trail.classList.add('glitch');
+            }
+            cursorTrail.appendChild(trail);
+            trail.addEventListener('animationend', () => trail.remove());
+            setTimeout(() => trail.parentNode && trail.remove(), 1000);
+        });
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-theme');
+            const toggleButton = document.querySelector('.theme-toggle');
+            
+            document.querySelectorAll('ul li:before').forEach(li => li.style.color = isDark ? '#00ddff' : '#00ffaa');
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.borderColor = isDark ? '#00ddff' : '#00ffaa';
+            });
+            
+            toggleButton.classList.add('active');
+            setTimeout(() => toggleButton.classList.remove('active'), 800);
+            createParticleBurst(toggleButton);
+        }
+
+        function createParticleBurst(element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = Math.random() * 60 + 30;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.left = `${centerX}px`;
+                particle.style.top = `${centerY}px`;
+                particle.style.background = isDarkTheme() ? 'linear-gradient(45deg, #00ddff, #00a0ff)' : 'linear-gradient(45deg, #00ffaa, #00ddff)';
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                document.body.appendChild(particle);
+                particle.addEventListener('animationend', () => particle.remove());
+            }
+        }
+
+        function isDarkTheme() {
+            return document.body.classList.contains('dark-theme');
+        }
+    </script>
+</body>
+</html>

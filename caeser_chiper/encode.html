@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encode - CipherVeil: Steganographic Enigma</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark-theme {
+            background: #1a1a1a;
+            color: #00ddff;
+        }
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.8;
+            transition: opacity 0.5s;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background: rgba(0, 15, 20, 0.7);
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+            border: 2px solid #00ffaa;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease, box-shadow 0.5s ease, background 0.5s ease, border-color 0.5s ease;
+            animation: neonBorder 3s infinite alternate;
+        }
+        .container:hover {
+            transform: perspective(1000px) rotateX(2deg) rotateY(2deg) scale(1.02);
+            box-shadow: 0 0 30px rgba(0, 255, 200, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffaa;
+            margin-bottom: 30px;
+            font-size: 3.2em;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #00ffaa, #00ddff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            animation: glitch 2s infinite alternate;
+        }
+        h2 {
+            color: #00ddff;
+            margin: 20px 0 15px;
+            font-size: 2em;
+            text-shadow: 0 0 10px #00ddff;
+        }
+        .encode-section {
+            background: rgba(0, 20, 30, 0.8);
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #00ffaa;
+            transition: background 0.5s ease, border-color 0.5s ease;
+        }
+        .input-group {
+            margin: 18px 0;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #00ffaa;
+            font-weight: bold;
+            transition: color 0.5s ease;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            background: #001620;
+            border: 2px solid #00ffaa;
+            border-radius: 6px;
+            color: #00ffaa;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus {
+            border-color: #00ddff;
+            box-shadow: 0 0 10px #00ddff;
+            outline: none;
+        }
+        input[type="file"] {
+            padding: 12px;
+            border: 2px dashed #00ffaa;
+            background: #001620;
+            color: #00ffaa;
+            transition: border-color 0.3s;
+        }
+        input[type="file"]:hover {
+            border-color: #00ddff;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: #00ffaa;
+        }
+        button {
+            background: linear-gradient(to right, #00ffaa, #00ddff);
+            color: #000;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin: 18px 0;
+            transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 170, 0.5);
+        }
+        #downloadLink {
+            display: inline-block;
+            background: linear-gradient(to right, #00ddff, #00a0ff);
+            color: #000;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+        }
+        #downloadLink:hover {
+            transform: translateY(-2px);
+        }
+        #cursor-trail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .trail {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(45deg, #00ffaa, #00ddff);
+            border-radius: 50%;
+            opacity: 0.9;
+            box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            pointer-events: none;
+            animation: fadeTrail 0.9s ease-out forwards;
+        }
+        .trail.glitch {
+            background: linear-gradient(45deg, #ff00aa, #ff0000);
+            transform: skew(20deg) rotate(45deg);
+            animation: glitchFade 0.6s ease-out forwards;
+        }
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleBurst 1s ease-out forwards;
+        }
+        @keyframes fadeTrail {
+            0% { opacity: 0.9; transform: scale(1) rotate(0deg); }
+            100% { opacity: 0; transform: scale(0.3) rotate(360deg); }
+        }
+        @keyframes glitchFade {
+            0% { opacity: 0.9; transform: scale(1) skew(20deg) rotate(45deg); }
+            50% { opacity: 0.6; transform: scale(1.4) skew(-15deg) rotate(60deg); }
+            100% { opacity: 0; transform: scale(0.5) skew(0deg) rotate(90deg); }
+        }
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #00ffaa; }
+            to { text-shadow: 0 0 25px #00ffaa, 0 0 35px #00ddff; }
+        }
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+        }
+        @keyframes particleBurst {
+            0% { opacity: 1; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(0.5) translate(var(--tx), var(--ty)); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 5px #00ffaa; }
+            50% { box-shadow: 0 0 20px #00ffaa, 0 0 30px #00ddff; }
+            100% { box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff; }
+        }
+        @keyframes neonBorder {
+            0% { border-color: #00ffaa; }
+            50% { border-color: #00ddff; }
+            100% { border-color: #00ffaa; }
+        }
+        #console-log {
+            padding: 15px;
+            background: rgba(0, 10, 15, 0.9);
+            border: 2px solid #00ffaa;
+            border-radius: 6px;
+            color: #00ffaa;
+            font-size: 14px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 20px;
+            transition: border-color 0.5s ease;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #001620;
+            border: 1px solid #00ffaa;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(to right, #00ffaa, #00ddff);
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px #00ffaa;
+        }
+        .theme-toggle, .clear-console {
+            padding: 10px 15px;
+            background: #00ddff;
+            color: #000;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            margin: 0 10px;
+            animation: flicker 4s infinite;
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .theme-toggle:hover, .clear-console:hover {
+            background: #00ffaa;
+            transform: translateY(-2px);
+        }
+        .theme-toggle.active {
+            box-shadow: 0 0 15px #00ffaa, 0 0 25px #00ddff;
+            animation: pulseGlow 0.8s ease-out;
+        }
+        .nav-bar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .nav-link {
+            padding: 10px 15px;
+            background: #00ddff;
+            color: #000;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .nav-link:hover {
+            background: #00ffaa;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #00ffaa;
+        }
+        .tooltip {
+            position: absolute;
+            background: #001620;
+            color: #00ffaa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+        }
+        .input-group:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+            20%, 24%, 55% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div id="cursor-trail"></div>
+    <div class="container">
+        <div class="nav-bar">
+            <a href="decode.html" class="nav-link">Decode</a>
+            <a href="about.html" class="nav-link">About</a>
+        </div>
+        <div class="theme-toggle" onclick="toggleTheme()">Toggle Theme</div>
+        <h1>CipherVeil: Steganographic Enigma - Encoder</h1>
+        <div class="encode-section">
+            <h2>Encode Message</h2>
+            <div class="input-group">
+                <label>Message to hide: </label>
+                <input type="text" id="message" placeholder="Enter your message" oninput="updateMessageLength()">
+                <div id="messageLength"></div>
+                <span class="tooltip" style="top: -30px; left: 0;">The text to encode into the image</span>
+            </div>
+            <div class="input-group">
+                <label>Shift value: </label>
+                <input type="number" id="shift" value="3" min="1" max="25">
+                <span class="tooltip" style="top: -30px; left: 0;">Caesar Cipher shift (1-25)</span>
+            </div>
+            <div class="input-group">
+                <label>Mod value: </label>
+                <input type="number" id="mod" value="26" min="1">
+                <span class="tooltip" style="top: -30px; left: 0;">Modulus for cipher (typically 26)</span>
+            </div>
+            <div class="input-group">
+                <label>Password (4 digits): </label>
+                <input type="password" id="password" maxlength="4" placeholder="Enter 4-digit password" pattern="[0-9]*">
+                <span class="tooltip" style="top: -30px; left: 0;">4-digit password for security</span>
+            </div>
+            <div class="input-group">
+                <label>Use XOR Encryption: </label>
+                <input type="checkbox" id="useXOR">
+                <span class="tooltip" style="top: -30px; left: 0;">Extra layer of encryption</span>
+            </div>
+            <div class="input-group">
+                <label>Add Image Noise: </label>
+                <input type="checkbox" id="addNoise">
+                <span class="tooltip" style="top: -30px; left: 0;">Obscures the image slightly</span>
+            </div>
+            <div class="input-group">
+                <label>Stealth Mode (Hidden Canvas): </label>
+                <input type="checkbox" id="stealthMode" onchange="toggleCanvasVisibility()">
+                <span class="tooltip" style="top: -30px; left: 0;">Hides the encoding preview</span>
+            </div>
+            <div class="input-group">
+                <label>Select Image: </label>
+                <input type="file" id="imageInput" accept="image/*" onchange="checkImageCapacity()">
+                <div id="capacityInfo"></div>
+                <span class="tooltip" style="top: -30px; left: 0;">Image to hide the message in</span>
+            </div>
+            <button onclick="encodeMessage()">Encode Message</button>
+            <div class="progress-bar"><div class="progress" id="encodeProgress"></div></div>
+            <div id="encryptedPreview" class="encrypted-preview">
+                <h3>Encrypted Data Preview:</h3>
+                <div class="preview-content"></div>
+            </div>
+            <canvas id="originalCanvas"></canvas>
+            <a id="downloadLink" style="display: none;">Download Encoded Image</a>
+        </div>
+        <h2>Console Logs</h2>
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+            <div class="clear-console" onclick="clearConsole()">Clear Console</div>
+        </div>
+        <div id="console-log"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$#@%&*(){}[]><~|';
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        const drops = Array(columns).fill(0);
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 2, 5, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = document.body.classList.contains('dark-theme') ? '#00ddff' : '#00ffaa';
+            ctx.font = fontSize + 'px monospace';
+            drops.forEach((y, i) => {
+                const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                const x = i * fontSize;
+                ctx.fillText(text, x, y * fontSize);
+                if (y * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(drawMatrix, 40);
+
+        const cursorTrail = document.getElementById('cursor-trail');
+        document.addEventListener('mousemove', (e) => {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            const trailSize = 12;
+            trail.style.left = `${e.clientX - trailSize/2}px`;
+            trail.style.top = `${e.clientY - trailSize/2}px`;
+            if (Math.random() < 0.2) {
+                trail.classList.add('glitch');
+            }
+            cursorTrail.appendChild(trail);
+            trail.addEventListener('animationend', () => trail.remove());
+            setTimeout(() => trail.parentNode && trail.remove(), 1000);
+        });
+
+        function logToConsole(message) {
+            const consoleLog = document.getElementById('console-log');
+            const timestamp = new Date().toLocaleTimeString();
+            consoleLog.innerHTML += `[${timestamp}] ${message}<br>`;
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('console-log').innerHTML = '';
+            logToConsole("Console cleared.");
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.classList.toggle('dark-theme');
+            const toggleButton = document.querySelector('.theme-toggle');
+            
+            document.querySelectorAll('label').forEach(label => label.style.color = isDark ? '#00ddff' : '#00ffaa');
+            document.querySelector('#console-log').style.borderColor = isDark ? '#00ddff' : '#00ffaa';
+            document.querySelector('.encode-section').style.borderColor = isDark ? '#00ddff' : '#00ffaa';
+            
+            toggleButton.classList.add('active');
+            setTimeout(() => toggleButton.classList.remove('active'), 800);
+            createParticleBurst(toggleButton);
+            logToConsole(`Theme switched to ${isDark ? 'Dark' : 'Light'}`);
+        }
+
+        function createParticleBurst(element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const particleCount = 20;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const angle = Math.random() * 2 * Math.PI;
+                const distance = Math.random() * 60 + 30;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.left = `${centerX}px`;
+                particle.style.top = `${centerY}px`;
+                particle.style.background = isDarkTheme() ? 'linear-gradient(45deg, #00ddff, #00a0ff)' : 'linear-gradient(45deg, #00ffaa, #00ddff)';
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                document.body.appendChild(particle);
+                particle.addEventListener('animationend', () => particle.remove());
+            }
+        }
+
+        function isDarkTheme() {
+            return document.body.classList.contains('dark-theme');
+        }
+
+        function updateProgress(barId, percentage) {
+            const progress = document.getElementById(barId);
+            progress.style.width = `${percentage}%`;
+        }
+
+        function xorEncrypt(text, key) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result;
+        }
+
+        function addNoiseToImage(imageData) {
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (Math.random() < 0.05) {
+                    data[i] += Math.random() * 20 - 10;
+                    data[i + 1] += Math.random() * 20 - 10;
+                    data[i + 2] += Math.random() * 20 - 10;
+                    data[i] = Math.max(0, Math.min(255, data[i]));
+                    data[i + 1] = Math.max(0, Math.min(255, data[i + 1]));
+                    data[i + 2] = Math.max(0, Math.min(255, data[i + 2]));
+                }
+            }
+            return imageData;
+        }
+
+        function toggleCanvasVisibility() {
+            const canvas = document.getElementById('originalCanvas');
+            canvas.style.display = document.getElementById('stealthMode').checked ? 'none' : 'block';
+            logToConsole(`Stealth Mode: ${document.getElementById('stealthMode').checked ? 'Enabled' : 'Disabled'}`);
+        }
+
+        const HEADER_LENGTH = 48;
+        function simpleHash(password) {
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                hash = ((hash << 5) - hash) + password.charCodeAt(i);
+                hash = hash & 0xFFFF;
+            }
+            return hash;
+        }
+        function caesarCipherEncrypt(text, shift, mod) {
+            return text.split('').map(char => {
+                let code = char.charCodeAt(0);
+                if (code >= 65 && code <= 90) return String.fromCharCode(65 + ((code - 65 + shift) % mod));
+                else if (code >= 97 && code <= 122) return String.fromCharCode(97 + ((code - 97 + shift) % mod));
+                else if (code >= 48 && code <= 57) return String.fromCharCode(48 + ((code - 48 + shift) % 10));
+                return char;
+            }).join('');
+        }
+        function textToBinary(text) {
+            return text.split('').map(char => char.charCodeAt(0).toString(2).padStart(8, '0')).join('');
+        }
+        function updateMessageLength() {
+            const message = document.getElementById('message').value;
+            const lengthDisplay = document.getElementById('messageLength');
+            const binaryLength = textToBinary(message).length;
+            lengthDisplay.textContent = `Message length: ${message.length} characters (${binaryLength} bits)`;
+            logToConsole(`Message length updated: ${message.length} chars`);
+        }
+        function checkImageCapacity() {
+            const imageInput = document.getElementById('imageInput');
+            const capacityInfo = document.getElementById('capacityInfo');
+            if (imageInput.files && imageInput.files[0]) {
+                const img = new Image();
+                img.src = URL.createObjectURL(imageInput.files[0]);
+                img.onload = function() {
+                    const maxBits = (img.width * img.height * 3) - HEADER_LENGTH;
+                    const maxChars = Math.floor(maxBits / 8);
+                    capacityInfo.textContent = `This image can store up to ${maxChars} characters`;
+                    capacityInfo.style.color = 'green';
+                    logToConsole(`Image capacity checked: ${maxChars} chars`);
+                };
+            }
+        }
+        async function encodeMessage() {
+            const message = document.getElementById('message').value;
+            const shift = parseInt(document.getElementById('shift').value);
+            const mod = parseInt(document.getElementById('mod').value);
+            const password = document.getElementById('password').value;
+            const imageInput = document.getElementById('imageInput');
+            const useXOR = document.getElementById('useXOR').checked;
+            const addNoise = document.getElementById('addNoise').checked;
+            if (!message) return alert("Please enter a message to hide!");
+            if (!/^\d{4}$/.test(password)) return alert("Password must be exactly 4 digits!");
+            if (!imageInput.files[0]) return alert("Please select an image!");
+            logToConsole("Encoding initiated...");
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                updateProgress('encodeProgress', progress);
+                if (progress >= 100) clearInterval(interval);
+            }, 200);
+            let processedMessage = message;
+            if (useXOR) {
+                processedMessage = xorEncrypt(message, password);
+                logToConsole("Applying XOR encryption...");
+            }
+            const encryptedMessage = caesarCipherEncrypt(processedMessage, shift, mod);
+            const previewDiv = document.getElementById('encryptedPreview');
+            previewDiv.querySelector('.preview-content').textContent = encryptedMessage;
+            previewDiv.classList.add('visible');
+            const binaryMessage = textToBinary(encryptedMessage);
+            const messageLength = binaryMessage.length;
+            const passwordHash = simpleHash(password);
+            const binaryShift = shift.toString(2).padStart(8, '0');
+            const binaryMod = mod.toString(2).padStart(8, '0');
+            const binaryMessageLength = messageLength.toString(2).padStart(16, '0');
+            const binaryPasswordHash = passwordHash.toString(2).padStart(16, '0');
+            const fullBinaryData = binaryShift + binaryMod + binaryMessageLength + binaryPasswordHash + binaryMessage;
+            const img = new Image();
+            img.src = URL.createObjectURL(imageInput.files[0]);
+            img.onload = function() {
+                const canvas = document.getElementById('originalCanvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                if (addNoise) {
+                    imageData = addNoiseToImage(imageData);
+                    logToConsole("Adding noise to image...");
+                }
+                const data = imageData.data;
+                if (fullBinaryData.length > (data.length * 3)) return alert("Message is too large for this image!");
+                let bitIndex = 0;
+                for (let i = 0; i < data.length && bitIndex < fullBinaryData.length; i += 4) {
+                    for (let j = 0; j < 3 && bitIndex < fullBinaryData.length; j++) {
+                        data[i + j] = (data[i + j] & 254) | parseInt(fullBinaryData[bitIndex]);
+                        bitIndex++;
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0);
+                const downloadLink = document.getElementById('downloadLink');
+                downloadLink.href = canvas.toDataURL('image/png');
+                downloadLink.download = 'encoded_image.png';
+                downloadLink.style.display = 'block';
+                logToConsole("Encoding complete. Image ready for download.");
+                updateProgress('encodeProgress', 100);
+            };
+        }
+    </script>
+</body>
+</html>
